@@ -33,7 +33,7 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
   if(location == "MAN") location = "Mannheim"
   if(location == "MOG") location = "Moenchengladbach"
 
-  line <- as.character(unique(sql[[1]][ , 2]))
+  line <- as.character(unique(unlist(sql[[1]][ , 2])))
   if( !export_local) export_directory <- service_backup_path(customer,location,line, dir_wd = dir_wd)
   if( export_local) export_directory <- getwd()
 
