@@ -152,6 +152,7 @@ service_email_LG3 <- function(today, yesterday
               suppressWarnings(refwl <- sort(as.numeric(gsub("X","",names(reftoexport)))))
               for(wl in paste0("X", refwl)) reftoexport <- reftoexport[ , moveme(names(reftoexport), paste(wl, "last")), with = F]}
           }
+          reftoexport <- reftoexport[order(reftoexport$datetime),]
           fwrite(reftoexport,paste0(unique(reftoexport$date),"_",
                                     systems$customer[ i ],"_",
                                     systems$location[ i ],"_",
@@ -182,6 +183,7 @@ service_email_LG3 <- function(today, yesterday
               suppressWarnings(drkwl <- sort(as.numeric(gsub("X","",names(drktoexport)))))
               for(wl in paste0("X", drkwl)) drktoexport <- drktoexport[ , moveme(names(drktoexport), paste(wl, "last")), with = F]}
           }
+          drktoexport <- drktoexport[order(drktoexport$datetime),]
           fwrite(drktoexport,paste0(unique(drktoexport$date),"_",
                                     systems$customer[ i ],"_",
                                     systems$location[ i ],"_",
@@ -224,6 +226,7 @@ service_email_LG3 <- function(today, yesterday
               suppressWarnings(spcwl <- sort(as.numeric(gsub("X","",names(spctoexport)))))
               for(wl in paste0("X", spcwl)) spctoexport <- spctoexport[ , moveme(names(spctoexport), paste(wl, "last")), with = F]}
           }
+          spctoexport <- spctoexport[order(spctoexport$datetime),]
           fwrite(spctoexport,paste0(unique(spctoexport$date),"_",
                                     systems$customer[ i ],"_",
                                     systems$location[ i ],"_",

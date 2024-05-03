@@ -211,17 +211,18 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
     read.spc$sub$drk$df <- rbindlist( read.spc$sub$drk$df, fill = T )
     read.spc$sub$drk$df <- read.spc$sub$drk$df[ , order( as.numeric( gsub("X", "", colnames(read.spc$sub$drk$df)))), with = F]
 
-    for(i in which( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ]) == 0)){
+    for(i in unique( c(which( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ]) == 0),
+                       which(unlist(lapply(read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ], function( x ) identical(x, character(0)))))))){
 
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][ i ] <- as.character(as.POSIXct( as.character( read.spc$sub$drk$raw[[ i ]]@data$fcmnt)))
-      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][ i ] ) > 0 ) next
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][ i ] <- as.character( as.POSIXct( as.character( substr(gsub("_", " ", read.spc$sub$drk$raw[[ i ]]@data$filename), 1, 19)), format = "%Y-%m-%d %H-%M-%S"))
-      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][ i ] ) > 0 ) next
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][ i ] <- as.character(read.spc$sub$drk$raw[[ i ]]@data$fdate)
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][[ i ]] <- as.character( read.spc$sub$drk$raw[[ i ]]@data$fcmnt)
+      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][[ i ]] ) > 12 ) next
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][[ i ]] <- as.character( substr(gsub("_", " ", read.spc$sub$drk$raw[[ i ]]@data$filename), 1, 19), format = "%Y-%m-%d %H-%M-%S")
+      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][[ i ]] ) > 12 ) next
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ][[ i ]] <- as.character(read.spc$sub$drk$raw[[ i ]]@data$fdate)
 
     }
 
-    read.spc$sub$drk$dt <- data.table( datetime = read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ]
+    read.spc$sub$drk$df <- data.table( datetime = read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Dark" ]
                                        , Iteration = read.spc$bin$Iteration[ read.spc$bin$spc.type == "Dark" ]
                                        , Average = read.spc$bin$Average[ read.spc$bin$spc.type == "Dark" ]
                                        , filename = read.spc$file$name[ read.spc$bin$spc.type == "Dark" ]
@@ -242,17 +243,18 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
     read.spc$sub$ref$df <- rbindlist( read.spc$sub$ref$df, fill = T )
     read.spc$sub$ref$df <- read.spc$sub$ref$df[ , order( as.numeric( gsub("X", "", colnames(read.spc$sub$ref$df)))), with = F]
 
-    for(i in which( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ]) == 0)){
+    for(i in unique( c(which( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ]) == 0),
+                       which(unlist(lapply(read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ], function( x ) identical(x, character(0)))))))){
 
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][ i ] <- as.character(as.POSIXct( as.character( read.spc$sub$ref$raw[[ i ]]@data$fcmnt)))
-      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][ i ] ) > 0 ) next
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][ i ] <- as.character( as.POSIXct( as.character( substr(gsub("_", " ", read.spc$sub$ref$raw[[ i ]]@data$filename), 1, 19)), format = "%Y-%m-%d %H-%M-%S"))
-      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][ i ] ) > 0 ) next
-      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][ i ] <- as.character(read.spc$sub$ref$raw[[ i ]]@data$fdate)
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][[ i ]] <- as.character( read.spc$sub$drk$raw[[ i ]]@data$fcmnt)
+      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][[ i ]] ) > 12 ) next
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][[ i ]] <- as.character( substr(gsub("_", " ", read.spc$sub$drk$raw[[ i ]]@data$filename), 1, 19), format = "%Y-%m-%d %H-%M-%S")
+      if( nchar( read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][[ i ]] ) > 12 ) next
+      read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ][[ i ]] <- as.character(read.spc$sub$drk$raw[[ i ]]@data$fdate)
 
     }
 
-    read.spc$sub$ref$dt <- data.table( datetime = read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ]
+    read.spc$sub$ref$df <- data.table( datetime = read.spc$bin$Originally.recorded[ read.spc$bin$spc.type == "Reference" ]
                                        , Iteration = read.spc$bin$Iteration[ read.spc$bin$spc.type == "Reference" ]
                                        , Average = read.spc$bin$Average[ read.spc$bin$spc.type == "Reference" ]
                                        , filename = read.spc$file$name[ read.spc$bin$spc.type == "Reference" ]
