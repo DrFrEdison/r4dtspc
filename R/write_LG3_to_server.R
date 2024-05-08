@@ -31,16 +31,17 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   for(i in 1:length(sqlt)) if(length(grep("NULL",sqlt[[i]][1,]))==0 & G10==F) sql[[i]] <- lapply(csv_file,function(x) fread(x,head=F,sep=";",dec=",",fill=T, check.names = F, colClasses = "character"))
   for(i in 1:length(sqlt)) if(length(grep("NULL",sqlt[[i]][1,]))==0 & G10==T) sql[[i]] <- lapply(csv_file,function(x) fread(x))
 
-  for(i in 1:length(sqlt)){ if(length(grep("NULL",sqlt[[i]][1,]))>0 & G10==F){
-    # nrows <- nrow(read.csv2(csv_file,head=F))
-    # for(i in 1:nrows){
-    #   sql <- lapply(csv_file,function(x) read.csv2(x,head=F,sep=";",dec=",",fill=T, check.names = F, colClasses = c("character",NULL),
-    #                                                skip=i,nrows = 1))
-    #   if(length(grep("NULL",sql[[1]][1,]))==0) break
-    # }
-    sql <- lapply(csv_file,function(x) fread(x,head=F,sep=";",dec=",",fill=T, check.names = F, colClasses = c("character",NULL),
-                                                 skip=i+1))
-  }
+  for(i in 1:length(sqlt)){
+    if(length(grep("NULL",sqlt[[i]][1,]))>0 & G10==F){
+      # nrows <- nrow(read.csv2(csv_file,head=F))
+      # for(i in 1:nrows){
+      #   sql <- lapply(csv_file,function(x) read.csv2(x,head=F,sep=";",dec=",",fill=T, check.names = F, colClasses = c("character",NULL),
+      #                                                skip=i,nrows = 1))
+      #   if(length(grep("NULL",sql[[1]][1,]))==0) break
+      # }
+      sql <- lapply(csv_file,function(x) fread(x,head=F,sep=";",dec=",",fill=T, check.names = F, colClasses = c("character",NULL),
+                                               skip=i+1))
+    }
   }
 
   for(i in 1:length(sqlt)){ if(length(grep("NULL",sqlt[[i]][1,]))>0 & G10==T){
@@ -62,8 +63,8 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   if(G10==T){sql_raw <- sql_raw[-1,]}
 
   # search for # ####
-  ppp <- apply(sql_raw,1,function(x) length(which(as.numeric(gregexpr("#",x))>0)))
-  if(length(which(ppp>0))>0) sql_raw <- sql_raw[-which(ppp>0),]
+  # ppp <- apply(sql_raw,1,function(x) length(which(as.numeric(gregexpr("#",x))>0)))
+  # if(length(which(ppp>0))>0) sql_raw <- sql_raw[-which(ppp>0),]
 
   # remove {} ####
   subbrace <- which(!is.na(as.numeric(apply(sql_raw[iii,],2,function(x) grep("\\{",x)))))
@@ -178,7 +179,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
       for(i in 1:length(unique(export_dark$Day))){
         darktoexport <- export_dark[which(export_dark$Day==unique(export_dark$Day)[i]),]
         setwd(export_directory)
-        setwd("./dark")
+        setwd("./drk")
         if(length(which(substr(dir(),1,10)==unique(darktoexport$Day)))>0){
           darktomerge <- read.csv2(dir()[which(gsub("_dark.csv","",dir())==unique(darktoexport$Day))])
           suppressWarnings(colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))] <- gsub("X","",colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))]))
@@ -193,10 +194,10 @@ LG3_transform_SQL_to_csv <- function(csv_file,
 
           darktoexport <- darkmerged
         }
-        write.csv2(darktoexport,paste0(unique(darktoexport$Day),"_",
-                                     customer,"_",
-                                     location,"_",
-                                     unit,"_dark.csv"),row.names = F)
+        fwrite(darktoexport,paste0(unique(darktoexport$Day),"_",
+                                   customer,"_",
+                                   location,"_",
+                                   unit,"_drk.csv"),row.names = F, sep = ";", dec = ",")
       }
       message(paste("dark exported to",getwd()))
     }

@@ -41,16 +41,16 @@ read.zip.spc_log <- function( cd.dirp
   if( !dir( pattern = "7z.exe")[1] == "7z.exe" ) stop( "7z.exe is missing")
 
   if( log_or_spc == "log" & LG != "SG") suppressMessages(system(paste0("7z.exe e "
-                  , cd.dirp, "/", zipfile
+                  , zipinfo$wd, "/", zipfile
                   , " -o"
-                  , paste(cd.dirp, gsub(paste0(".", tools::file_ext(zipfile), "$"), "", zipfile),sep="/")
+                  , paste(zipinfo$wd, gsub(paste0(".", tools::file_ext(zipfile), "$"), "", zipfile),sep="/")
                   , " *.log -r -aoa")
            , show.output.on.console = F))
 
   if( log_or_spc == "spc" & LG != "SG") suppressMessages(system(paste0("7z.exe e "
-                                                          , cd.dirp, "/", zipfile
+                                                          , zipinfo$wd, "/", zipfile
                                                           , " -o"
-                                                          , paste(cd.dirp, gsub(paste0(".", tools::file_ext(zipfile), "$"), "", zipfile),sep="/")
+                                                          , paste(zipinfo$wd, gsub(paste0(".", tools::file_ext(zipfile), "$"), "", zipfile),sep="/")
                                                           , " *.spc -r -aoa")
                                                    , show.output.on.console = F))
 
