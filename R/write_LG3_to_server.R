@@ -180,20 +180,20 @@ LG3_transform_SQL_to_csv <- function(csv_file,
         darktoexport <- export_dark[which(export_dark$Day==unique(export_dark$Day)[i]),]
         setwd(export_directory)
         setwd("./drk")
-        if(length(which(substr(dir(),1,10)==unique(darktoexport$Day)))>0){
-          darktomerge <- read.csv2(dir()[which(gsub("_dark.csv","",dir())==unique(darktoexport$Day))])
-          suppressWarnings(colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))] <- gsub("X","",colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))]))
-
-          darktomerge$Day <- as.Date(darktomerge$Day)
-          darktomerge$DateTime <- as.POSIXct(darktomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
-
-          darkmerged <- rbind(darktomerge,darktoexport)
-          darkmerged <- darkmerged[order(darkmerged$DateTime),]
-
-          darkmerged <- darkmerged[which(!duplicated.data.frame(darkmerged[,150:350])),]
-
-          darktoexport <- darkmerged
-        }
+        if(length(which(substr(dir(),1,10)==unique(darktoexport$Day)))>0){ next }
+          # darktomerge <- read.csv2(dir()[which(gsub("_dark.csv","",dir())==unique(darktoexport$Day))])
+          # suppressWarnings(colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))] <- gsub("X","",colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))]))
+          #
+          # darktomerge$Day <- as.Date(darktomerge$Day)
+          # darktomerge$DateTime <- as.POSIXct(darktomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+          #
+          # darkmerged <- rbind(darktomerge,darktoexport)
+          # darkmerged <- darkmerged[order(darkmerged$DateTime),]
+          #
+          # darkmerged <- darkmerged[which(!duplicated.data.frame(darkmerged[,150:350])),]
+          #
+          # darktoexport <- darkmerged
+        # }
         fwrite(darktoexport,paste0(unique(darktoexport$Day),"_",
                                    customer,"_",
                                    location,"_",
