@@ -1,8 +1,8 @@
 # Column names of your SQL-Export file
 namessql_base <- c("DateTime","measurementTypeCode","DTproductName","MixerNumber","UNSB_Name","Modell",
-                       "accumulations","lightPath","Reported_Value","Scores","Y_Predicted","YDeviation",
-                       "Y_Predicted_Corr","Bias","Hotellingt2","Hotellingt2Lim","FResXSamp","FResLims","integrationTime","SpectrometerTemperature","FluidFlow","FluidTemperature",
-                       "FluidPressure","TimeSinceBGD","Signal_ProductFlows")
+                   "accumulations","lightPath","Reported_Value","Scores","Y_Predicted","YDeviation",
+                   "Y_Predicted_Corr","Bias","Hotellingt2","Hotellingt2Lim","FResXSamp","FResLims","integrationTime","SpectrometerTemperature","FluidFlow","FluidTemperature",
+                   "FluidPressure","TimeSinceBGD","Signal_ProductFlows")
 wl <- 190:598
 
 LG3_transform_SQL_to_csv <- function(csv_file,
@@ -17,7 +17,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   location <- input$location
   unit <- input$unit
 
-  if(sqlquestion %in% c("dark","production","reference","mea")!=T) stop("No sqlquestion defined")
+  if(sqlquestion %in% c("drk","production","reference","mea")!=T) stop("No sqlquestion defined")
 
   export_directory <- service_backup_path(input$customer,input$location,input$unit, dir_wd = wd)
   setwd(file_directory)
@@ -83,7 +83,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   if(G10==F){sql$data <- sql_raw[,1:(subbrace[1]-1)]}else{sql$data <- sql_raw[,2:(subbrace[1]-1)]}
 
   if(length(sqlquestion)==1 && sqlquestion %in% "production") sql$spc <- sql_raw[,subbrace[1]:subbrace2[1]]
-  if(length(sqlquestion)==1 && sqlquestion %in% "dark") sql$dark <- sql_raw[,subbrace[1]:subbrace2[1]]
+  if(length(sqlquestion)==1 && sqlquestion %in% "drk") sql$drk <- sql_raw[,subbrace[1]:subbrace2[1]]
   if(length(sqlquestion)==1 && sqlquestion %in% "reference") sql$ref <- sql_raw[,subbrace[1]:subbrace2[1]]
   if(length(sqlquestion)==1 && sqlquestion %in% "mea") sql$mea <- sql_raw[,subbrace[1]:subbrace2[1]]
 
@@ -96,7 +96,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   suppressWarnings(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)] <- apply(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)],2,function(x) as.numeric(gsub(",",".",x))))
 
   if(length(sqlquestion)==1 && sqlquestion %in% "production") sql$spc <- t(sql$spc)
-  if(length(sqlquestion)==1 && sqlquestion %in% "dark") sql$dark <- t(sql$dark)
+  if(length(sqlquestion)==1 && sqlquestion %in% "drk") sql$drk <- t(sql$drk)
   if(length(sqlquestion)==1 && sqlquestion %in% "reference") sql$ref <- t(sql$ref)
   if(length(sqlquestion)==1 && sqlquestion %in% "mea") sql$mea <- t(sql$mea)
 
@@ -118,22 +118,22 @@ LG3_transform_SQL_to_csv <- function(csv_file,
     suppressWarnings(colnames(export_ref)[which(!is.na(as.numeric(gsub("X","",colnames(export_ref)))))] <- gsub("X","",colnames(export_ref)[which(!is.na(as.numeric(gsub("X","",colnames(export_ref)))))]))
   }
 
-  if(length(which(sqlquestion=="dark"))==1){
-    darkdatamean <- apply(sql$dark,2,mean)
-    darkdatasd <- apply(sql$dark,2,sd)
-    if(length(which(!duplicated(darkdatamean)))!=length(which(!duplicated(darkdatasd)))){
-      if(length(which(!duplicated(darkdatamean)))>length(which(!duplicated(darkdatasd)))){ dupdark <- which(!duplicated(darkdatasd)) } else{ dupdark <- which(!duplicated(darkdatamean))}
-    } else dupdark <- as.numeric(which(!duplicated(darkdatamean)))
+  if(length(which(sqlquestion=="drk"))==1){
+    drkdatamean <- apply(sql$drk,2,mean)
+    drkdatasd <- apply(sql$drk,2,sd)
+    if(length(which(!duplicated(drkdatamean)))!=length(which(!duplicated(drkdatasd)))){
+      if(length(which(!duplicated(drkdatamean)))>length(which(!duplicated(drkdatasd)))){ dupdrk <- which(!duplicated(drkdatasd)) } else{ dupdrk <- which(!duplicated(drkdatamean))}
+    } else dupdrk <- as.numeric(which(!duplicated(drkdatamean)))
 
-    darkdata <- sql$data[dupdark,]
-    exportdark <- t(sql$dark[,dupdark]);rm(darkdatamean,darkdatasd,dupdark)
-    suppressWarnings(export_dark <- data.frame(darkdata,exportdark))
-    colnames(export_dark)[grep("NA",colnames(export_dark))] <- wl
+    drkdata <- sql$data[dupdrk,]
+    exportdrk <- t(sql$drk[,dupdrk]);rm(drkdatamean,drkdatasd,dupdrk)
+    suppressWarnings(export_drk <- data.frame(drkdata,exportdrk))
+    colnames(export_drk)[grep("NA",colnames(export_drk))] <- wl
 
-    # export_dark$Modell[which(export_dark$SampleName == "Coca-Cola" & export_dark$Modell == "NULL")] <- "LG3_GS2_CC_CC(CP)_V01"
+    # export_drk$Modell[which(export_drk$SampleName == "Coca-Cola" & export_drk$Modell == "NULL")] <- "LG3_GS2_CC_CC(CP)_V01"
 
 
-    suppressWarnings(colnames(export_dark)[which(!is.na(as.numeric(gsub("X","",colnames(export_dark)))))] <- gsub("X","",colnames(export_dark)[which(!is.na(as.numeric(gsub("X","",colnames(export_dark)))))]))
+    suppressWarnings(colnames(export_drk)[which(!is.na(as.numeric(gsub("X","",colnames(export_drk)))))] <- gsub("X","",colnames(export_drk)[which(!is.na(as.numeric(gsub("X","",colnames(export_drk)))))]))
 
   }
 
@@ -152,54 +152,52 @@ LG3_transform_SQL_to_csv <- function(csv_file,
         reftoexport <- export_ref[which(export_ref$Day==unique(export_ref$Day)[i]),]
         setwd(export_directory)
         setwd("./ref")
-        if(length(which(substr(dir(),1,10)==unique(reftoexport$Day)))>0){
-          reftomerge <- read.csv2(dir()[which(gsub("_ref.csv","",dir())==unique(reftoexport$Day))])
-          suppressWarnings(colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))] <- gsub("X","",colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))]))
-
-          reftomerge$Day <- as.Date(reftomerge$Day)
-          reftomerge$DateTime <- as.POSIXct(reftomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
-
-          ifelse(length(unique(names(reftomerge)!=names(reftoexport)))>1,
-                 refmerged <- plyr::rbind.fill(reftomerge,reftoexport),
-                 refmerged <- rbind(reftomerge,reftoexport))
-
-          refmerged <- refmerged[order(refmerged$DateTime),]
-
-          refmerged <- refmerged[which(!duplicated.data.frame(refmerged[,150:350])),]
-          reftoexport <- refmerged
-        }
-        write.csv2(reftoexport,paste0(unique(reftoexport$Day),"_",
-                                      customer,"_",
-                                      location,"_",
-                                      unit,"_ref.csv"),row.names = F)
+        if(length(which(substr(dir(),1,10)==unique(reftoexport$Day)))>0){ next }
+        # reftomerge <- read.csv2(dir()[which(gsub("_ref.csv","",dir())==unique(reftoexport$Day))])
+        # suppressWarnings(colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))] <- gsub("X","",colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))]))
+        #
+        # reftomerge$Day <- as.Date(reftomerge$Day)
+        # reftomerge$DateTime <- as.POSIXct(reftomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        #
+        # refmerged <- rbind(reftomerge,reftoexport)
+        # refmerged <- refmerged[order(refmerged$DateTime),]
+        #
+        # refmerged <- refmerged[which(!duplicated.data.frame(refmerged[,150:350])),]
+        #
+        # reftoexport <- refmerged
+        # }
+        fwrite(reftoexport,paste0(unique(reftoexport$Day),"_",
+                                  customer,"_",
+                                  location,"_",
+                                  unit,"_ref.csv"),row.names = F, sep = ";", dec = ",")
       }
       message(paste("REF exported to",getwd()))
     }
-    if(length(which(sqlquestion=="dark"))==1){
-      for(i in 1:length(unique(export_dark$Day))){
-        darktoexport <- export_dark[which(export_dark$Day==unique(export_dark$Day)[i]),]
+    if(length(which(sqlquestion=="drk"))==1){
+      for(i in 1:length(unique(export_drk$Day))){
+        drktoexport <- export_drk[which(export_drk$Day==unique(export_drk$Day)[i]),]
         setwd(export_directory)
         setwd("./drk")
-        if(length(which(substr(dir(),1,10)==unique(darktoexport$Day)))>0){ next }
-          # darktomerge <- read.csv2(dir()[which(gsub("_dark.csv","",dir())==unique(darktoexport$Day))])
-          # suppressWarnings(colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))] <- gsub("X","",colnames(darktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(darktomerge)))))]))
-          #
-          # darktomerge$Day <- as.Date(darktomerge$Day)
-          # darktomerge$DateTime <- as.POSIXct(darktomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
-          #
-          # darkmerged <- rbind(darktomerge,darktoexport)
-          # darkmerged <- darkmerged[order(darkmerged$DateTime),]
-          #
-          # darkmerged <- darkmerged[which(!duplicated.data.frame(darkmerged[,150:350])),]
-          #
-          # darktoexport <- darkmerged
+        if(length(which(substr(dir(),1,10)==unique(drktoexport$Day)))>0){ next }
+        # drktomerge <- read.csv2(dir()[which(gsub("_drk.csv","",dir())==unique(drktoexport$Day))])
+        # suppressWarnings(colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))] <- gsub("X","",colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))]))
+        #
+        # drktomerge$Day <- as.Date(drktomerge$Day)
+        # drktomerge$DateTime <- as.POSIXct(drktomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        #
+        # drkmerged <- rbind(drktomerge,drktoexport)
+        # drkmerged <- drkmerged[order(drkmerged$DateTime),]
+        #
+        # drkmerged <- drkmerged[which(!duplicated.data.frame(drkmerged[,150:350])),]
+        #
+        # drktoexport <- drkmerged
         # }
-        fwrite(darktoexport,paste0(unique(darktoexport$Day),"_",
-                                   customer,"_",
-                                   location,"_",
-                                   unit,"_drk.csv"),row.names = F, sep = ";", dec = ",")
+        fwrite(drktoexport,paste0(unique(drktoexport$Day),"_",
+                                  customer,"_",
+                                  location,"_",
+                                  unit,"_drk.csv"),row.names = F, sep = ";", dec = ",")
       }
-      message(paste("dark exported to",getwd()))
+      message(paste("drk exported to",getwd()))
     }
     if(length(which(sqlquestion=="production"))==1){
       for(i in 1:length(unique(export_spc$Day))){
@@ -232,4 +230,4 @@ LG3_transform_SQL_to_csv <- function(csv_file,
       message(paste("SPC exported to",getwd()))
     }
   }
-  }
+}
