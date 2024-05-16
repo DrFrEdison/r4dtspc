@@ -59,9 +59,14 @@ service_email_LG2 <- function(today, yesterday
     lg2_service_email$wdc <- getwd() # Save current path
 
     # Search for log_zip emails ####
-    lg2_service_email$search_log <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_log_zip")
-    lg2_service_email$find_log <- con$search(request = AND(mRpostman::string(expr = lg2_service_email$search_log, where = "SUBJECT"),
+    lg2_service_email$search_log1 <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_log_zip")
+    lg2_service_email$find_log1 <- con$search(request = AND(mRpostman::string(expr = lg2_service_email$search_log1, where = "SUBJECT"),
                                                            since(date_char = lg2_service_email$today_outlook)), use_uid = T)
+
+    lg2_service_email$search_log2 <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_spc_zip")
+    lg2_service_email$find_log2 <- con$search(request = AND(mRpostman::string(expr = lg2_service_email$search_log2, where = "SUBJECT"),
+                                                           since(date_char = lg2_service_email$today_outlook)), use_uid = T)
+    lg2_service_email$find_log <- sort( unique( c(lg2_service_email$find_log1, lg2_service_email$find_log2)))
 
     message("Found "
             , ifelse( all(is.na( lg2_service_email$find_log)), 0, length(lg2_service_email$find_log))
@@ -69,9 +74,15 @@ service_email_LG2 <- function(today, yesterday
             , " from ", paste0(systems$customer[i], "_", systems$location[i], "_", systems$line[i], "_", systems$LG[i]))
 
     # Search for csv_zip emails ####
-    lg2_service_email$search_csv <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_csv_zip")
-    lg2_service_email$find_csv <- con$search(request = mRpostman::string(expr = lg2_service_email$search_csv, where = "SUBJECT")
+    lg2_service_email$search_csv1 <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_csv_zip")
+    lg2_service_email$find_csv1 <- con$search(request = mRpostman::string(expr = lg2_service_email$search_csv1, where = "SUBJECT")
                                              , use_uid = T)
+
+    lg2_service_email$search_csv2 <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_csv_zip")
+    lg2_service_email$find_csv2 <- con$search(request = mRpostman::string(expr = lg2_service_email$search_csv2, where = "SUBJECT")
+                                             , use_uid = T)
+
+    lg2_service_email$find_csv <- sort( unique( c(lg2_service_email$find_csv1, lg2_service_email$find_csv2)))
 
     message("Found "
             , ifelse(all(is.na(lg2_service_email$find_csv)), 0, length(lg2_service_email$find_csv))
