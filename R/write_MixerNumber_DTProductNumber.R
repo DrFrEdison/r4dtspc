@@ -36,14 +36,14 @@ produkt_per_day_year <- function(customer, location, line, LG, year, date_file =
       if( length( unique( filep$trans$date)) > 1) message("More than one date in csv file")
       if( length( unique( filep$trans$date)) > 1) break
 
-      if(LG != "3" & LG != "SG3") if(length(unique(filep$trans[ , grep("Produkt", names(filep$trans)), with = F])) == 0) next
-      if(LG != "3" & LG != "SG3"){
+      if(LG != "LG3" & LG != "SG3") if(length(unique(filep$trans[ , grep("Produkt", names(filep$trans)), with = F])) == 0) next
+      if(LG != "LG3" & LG != "SG3"){
         filep$export <- data.frame(cbind(unique( filep$trans$date), unique(filep$trans[ , grep("Produkt", names(filep$trans)), with = F])))
         names(filep$export)[ 2 ] <- "MixerNumber"
 
       }
 
-      if(LG == "3" |  LG == "SG3"){
+      if(LG == "LG3" |  LG == "SG3"){
 
         if( length( grep("DTproductNumber", names(filep$trans))) > 0 &
             length( grep("MixerNumber", names(filep$trans))) == 0) filep$export <- data.frame(date = unique( filep$trans$date)
@@ -75,7 +75,7 @@ produkt_per_day_year <- function(customer, location, line, LG, year, date_file =
 
       }
 
-      if(LG == "2"){
+      if(LG == "LG2"){
 
         if( length( grep("Produktnummer", names(filep$trans)) ) > 0 )
           filep$export <- data.frame(date = as.character( unique( filep$trans$date))
