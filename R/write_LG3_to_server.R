@@ -15,11 +15,11 @@ LG3_transform_SQL_to_csv <- function(csv_file,
 
   customer <- input$customer
   location <- input$location
-  unit <- input$unit
+  line <- input$unit
 
   if(sqlquestion %in% c("drk","production","reference","mea")!=T) stop("No sqlquestion defined")
 
-  export_directory <- service_backup_path(input$customer,input$location,input$unit, dir_wd = wd)
+  export_directory <- service_backup_path(input$customer,input$location,input$line, dir_wd = wd)
   setwd(file_directory)
 
   # sql list
@@ -90,9 +90,16 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   if(length(sqlquestion)>1) stop("Skript does not yet work for more than one spectra type, i.e. abs, drk, bgd or mea")
   rm(sql_raw)
 
-  sql$data$DateTime <- as.POSIXct(as.character(sql$data$DateTime),format=c("%Y-%m-%d %H:%M:%OS"),tz="Europe/Berlin")
-  sql$data$Day <- as.Date(sql$data$DateTime,tz="Europe/Berlin")
-  sql$data <- sql$data[moveme(names(sql$data), "Day first")]
+  sql$data$datetime <- as.POSIXct(as.character(sql$data$DateTime),format=c("%Y-%m-%d %H:%M:%OS"),tz="Europe/Berlin")
+  sql$data$date <- as.Date(sql$data$DateTime,tz="Europe/Berlin")
+  sql$data$time <- strftime(sql$data$DateTime, format = "%H:%M:%S", tz = "Europe/Berlin")
+
+  sql$data$DateTime <- NULL
+
+  sql$date$location <- location
+  sql$date$line <- line
+
+  sql$data <- sql$data[moveme(names(sql$data), "location line datetime date time first")]
   suppressWarnings(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)] <- apply(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)],2,function(x) as.numeric(gsub(",",".",x))))
 
   if(length(sqlquestion)==1 && sqlquestion %in% "production") sql$spc <- t(sql$spc)
@@ -148,84 +155,84 @@ LG3_transform_SQL_to_csv <- function(csv_file,
 
   if(export_server==T){
     if(length(which(sqlquestion=="reference"))==1){
-      for(i in 1:length(unique(export_ref$Day))){
-        reftoexport <- export_ref[which(export_ref$Day==unique(export_ref$Day)[i]),]
+      for(i in 1:length(unique(export_ref$date))){
+        reftoexport <- export_ref[which(export_ref$date==unique(export_ref$date)[i]),]
         setwd(export_directory)
         setwd("./ref")
-        if(length(which(substr(dir(),1,10)==unique(reftoexport$Day)))>0){ next }
-        # reftomerge <- read.csv2(dir()[which(gsub("_ref.csv","",dir())==unique(reftoexport$Day))])
+        if(length(which(substr(dir(),1,10)==unique(reftoexport$date)))>0){ next }
+        # reftomerge <- read.csv2(dir()[which(gsub("_ref.csv","",dir())==unique(reftoexport$date))])
         # suppressWarnings(colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))] <- gsub("X","",colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))]))
         #
-        # reftomerge$Day <- as.Date(reftomerge$Day)
-        # reftomerge$DateTime <- as.POSIXct(reftomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        # reftomerge$date <- as.Date(reftomerge$date)
+        # reftomerge$datetime <- as.POSIXct(reftomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
         #
         # refmerged <- rbind(reftomerge,reftoexport)
-        # refmerged <- refmerged[order(refmerged$DateTime),]
+        # refmerged <- refmerged[order(refmerged$datetime),]
         #
         # refmerged <- refmerged[which(!duplicated.data.frame(refmerged[,150:350])),]
         #
         # reftoexport <- refmerged
         # }
-        fwrite(reftoexport,paste0(unique(reftoexport$Day),"_",
+        fwrite(reftoexport,paste0(unique(reftoexport$date),"_",
                                   customer,"_",
                                   location,"_",
-                                  unit,"_ref.csv"),row.names = F, sep = ";", dec = ",")
+                                  line,"_ref.csv"),row.names = F, sep = ";", dec = ",")
       }
       message(paste("REF exported to",getwd()))
     }
     if(length(which(sqlquestion=="drk"))==1){
-      for(i in 1:length(unique(export_drk$Day))){
-        drktoexport <- export_drk[which(export_drk$Day==unique(export_drk$Day)[i]),]
+      for(i in 1:length(unique(export_drk$date))){
+        drktoexport <- export_drk[which(export_drk$date==unique(export_drk$date)[i]),]
         setwd(export_directory)
         setwd("./drk")
-        if(length(which(substr(dir(),1,10)==unique(drktoexport$Day)))>0){ next }
-        # drktomerge <- read.csv2(dir()[which(gsub("_drk.csv","",dir())==unique(drktoexport$Day))])
+        if(length(which(substr(dir(),1,10)==unique(drktoexport$date)))>0){ next }
+        # drktomerge <- read.csv2(dir()[which(gsub("_drk.csv","",dir())==unique(drktoexport$date))])
         # suppressWarnings(colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))] <- gsub("X","",colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))]))
         #
-        # drktomerge$Day <- as.Date(drktomerge$Day)
-        # drktomerge$DateTime <- as.POSIXct(drktomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        # drktomerge$date <- as.Date(drktomerge$date)
+        # drktomerge$datetime <- as.POSIXct(drktomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
         #
         # drkmerged <- rbind(drktomerge,drktoexport)
-        # drkmerged <- drkmerged[order(drkmerged$DateTime),]
+        # drkmerged <- drkmerged[order(drkmerged$datetime),]
         #
         # drkmerged <- drkmerged[which(!duplicated.data.frame(drkmerged[,150:350])),]
         #
         # drktoexport <- drkmerged
         # }
-        fwrite(drktoexport,paste0(unique(drktoexport$Day),"_",
+        fwrite(drktoexport,paste0(unique(drktoexport$date),"_",
                                   customer,"_",
                                   location,"_",
-                                  unit,"_drk.csv"),row.names = F, sep = ";", dec = ",")
+                                  line,"_drk.csv"),row.names = F, sep = ";", dec = ",")
       }
       message(paste("drk exported to",getwd()))
     }
     if(length(which(sqlquestion=="production"))==1){
-      for(i in 1:length(unique(export_spc$Day))){
-        spctoexport <- export_spc[which(export_spc$Day==unique(export_spc$Day)[i]),]
+      for(i in 1:length(unique(export_spc$date))){
+        spctoexport <- export_spc[which(export_spc$date==unique(export_spc$date)[i]),]
         setwd(export_directory)
         setwd("./spc")
-        if(length(which(substr(dir(),1,10)==unique(spctoexport$Day)))>0){
-          spctomerge <- read.csv2(dir()[which(gsub("_spc.csv","",dir())==unique(spctoexport$Day))])
+        if(length(which(substr(dir(),1,10)==unique(spctoexport$date)))>0){
+          spctomerge <- read.csv2(dir()[which(gsub("_spc.csv","",dir())==unique(spctoexport$date))])
 
           #ppp <- apply(sql_raw,1,function(x) length(which(as.numeric(gregexpr("#",x))>0)))
           #if(length(which(ppp>0))>0) sql_raw <- sql_raw[-which(ppp>0),]
 
           suppressWarnings(colnames(spctomerge)[which(!is.na(as.numeric(gsub("X","",colnames(spctomerge)))))] <- gsub("X","",colnames(spctomerge)[which(!is.na(as.numeric(gsub("X","",colnames(spctomerge)))))]))
 
-          spctomerge$Day <- as.Date(spctomerge$Day)
-          spctomerge$DateTime <- as.POSIXct(spctomerge$DateTime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+          spctomerge$date <- as.Date(spctomerge$date)
+          spctomerge$datetime <- as.POSIXct(spctomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
 
           spcmerged <- rbind(spctomerge,spctoexport)
-          spcmerged <- spcmerged[order(spcmerged$DateTime),]
+          spcmerged <- spcmerged[order(spcmerged$datetime),]
 
           spcmerged <- spcmerged[which(!duplicated.data.frame(spcmerged[,150:350])),]
 
           spctoexport <- spcmerged
         }
-        write.csv2(spctoexport,paste0(unique(spctoexport$Day),"_",
+        write.csv2(spctoexport,paste0(unique(spctoexport$date),"_",
                                       customer,"_",
                                       location,"_",
-                                      unit,"_spc.csv"),row.names = F)
+                                      line,"_spc.csv"),row.names = F)
       }
       message(paste("SPC exported to",getwd()))
     }

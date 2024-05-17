@@ -44,6 +44,7 @@ service_email_LG2 <- function(today, yesterday
   # Loop to run script for all LG1 and LG2 ####
   for(i in 1:nrow(systems)){
 
+
     con$select_folder(name = folder) # Select Inbox
 
     # Create and navigate to folder customer/location/line
@@ -57,6 +58,23 @@ service_email_LG2 <- function(today, yesterday
     setwd(paste0("./",systems$line[i]))
 
     lg2_service_email$wdc <- getwd() # Save current path
+
+    # delete old files ####
+    setwd(lg2_service_email$wdc)
+    dir.create(servicemail, showWarnings = F)
+    setwd(paste0("./", servicemail))
+    dir.create(folder, showWarnings = F)
+    setwd(paste0("./", folder))
+
+    if(delete_files == T){
+      unlink(dir(), recursive = T, force = T)
+      if(length(dir())>0) file.remove(dir(), all.files = T, recursive = T)
+    }
+
+    setwd(wd_export)
+    setwd(paste0("./",systems$customer[i]))
+    setwd(paste0("./",systems$short[i]))
+    setwd(paste0("./",systems$line[i]))
 
     # Search for log_zip emails ####
     lg2_service_email$search_log1 <- paste0(yesterday, "_", systems$customer[i], "_", systems$short[i], "_", systems$line[i], "_log_zip")

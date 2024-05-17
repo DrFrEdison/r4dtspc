@@ -123,6 +123,8 @@ service_email_LG3 <- function(today, yesterday
 
       read.spc <- rbindlist(read.spc, fill = T)
       read.spc$time <- strftime(read.spc$datetime, format = "%H:%M:%S", tz = "UTC")
+      read.spc$location <- systems$location[ i ]
+      read.spc$line <- systems$line[ i ]
     }
 
     # Move csv ####
