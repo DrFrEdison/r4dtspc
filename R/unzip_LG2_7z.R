@@ -3,13 +3,6 @@ unzip.LG2.7z <- function(date = NA # Which date should be unzipped? If NA then a
                          , customerlist # List with lines
                          , dir_wd){ # wd
 
-  # Unzip only one line?
-  if( !is.na(line)){
-    which.lines <- which( customerlist$line == line)
-  } else {which.lines <- 1:nrow(customerlist)  }
-
-  # Loop through lines ####
-
   # Folder paths ####
   zip.dir <- paste0(service_backup_path(as.character(customerlist$customer), as.character(customerlist$location), as.character(customerlist$line), dir_wd = dir_wd),"ZIP/")
   csv.dir <- paste0(service_backup_path(as.character(customerlist$customer), as.character(customerlist$location), as.character(customerlist$line), dir_wd = dir_wd),"CSV/")
