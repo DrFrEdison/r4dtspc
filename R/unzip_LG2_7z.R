@@ -243,9 +243,6 @@ unzip.LG2.7z <- function(date = NA # Which date should be unzipped? If NA then a
       rangep <- which(colnames(ref$final) == "Mittelungen") : ncol(ref$final)
       suppressWarnings(colnames(ref$final)[rangep][which(substr(colnames(ref$final)[rangep], 1, 1) == "V" & !is.na(as.numeric(substr(colnames(ref$final)[rangep], 2, 2))))] <- paste0("X", unlist(unique(ref$wl))))
 
-      as.character( unlist( customerlist[o , "customer"]) )
-      customerlist %>% pull(customer)
-
       fwrite(ref$final
              , paste0(ref.dir
                       , gsub(".zip","",unlist(zip.files)[j]), "_"
