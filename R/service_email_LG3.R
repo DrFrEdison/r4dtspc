@@ -33,8 +33,9 @@ service_email_LG3 <- function(today, yesterday
                         password=pw,
                         use_ssl = ssl,
                         verbose = verbose,
-                        buffersize = 512000,
-                        timeout_ms = 10000)
+                        # buffersize = 512000,
+                        # timeout_ms = 10000
+                        )
 
   con$reset_timeout_ms(x = 30000) # Long timeout to ensure the system has enough time to process the emails
   con$reset_verbose(x = FALSE) # The responding text is just too long, therefore suppress it
