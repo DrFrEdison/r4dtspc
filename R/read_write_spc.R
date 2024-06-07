@@ -284,6 +284,7 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
       read.spc$sub$spc$Interval[[ i ]] <- as.character(as.POSIXct( read.spc$bin$Originally.recorded[ xrange ][[ 1 ]]) + read.spc$sub$spc$Interval[[ i ]])
 
       read.spc$sub$spc$df[[ i ]] <- data.table( datetime = read.spc$sub$spc$Interval[[ i ]]
+                                                , datetimeunique = read.spc$sub$spc$Interval[[ i ]][ 1 ]
                                                 , Iteration = read.spc$bin$Iteration[ xrange ]
                                                 , Average = read.spc$bin$Average[ xrange ]
                                                 , filename = read.spc$file$name[ xrange ]
@@ -323,8 +324,12 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
     # create new dt and order by columns ####
     read.spc$sub$spc$df <- rbindlist( read.spc$sub$spc$df, fill = T )
 
-    read.spc$sub$spc$column.order <- c("datetime", "Iteration", "Average", "filename"
-                                       , sort( colnames(read.spc$sub$spc$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$sub$spc$df))) )) ]))
+    if("datetimeunique" %in% colnames(read.spc$sub$spc$df)){
+      read.spc$sub$spc$column.order <- c("datetime", "datetimeunique", "Iteration", "Average", "filename"
+                                         , sort( colnames(read.spc$sub$spc$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$sub$spc$df))) )) ]))} else{
+                                           read.spc$sub$spc$column.order <- c("datetime", "Iteration", "Average", "filename"
+                                                                              , sort( colnames(read.spc$sub$spc$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$sub$spc$df))) )) ]))
+                                         }
     read.spc$sub$spc$df <- read.spc$sub$spc$df[ , read.spc$sub$spc$column.order, with = F]
   }
 
@@ -351,6 +356,7 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
       read.spc$sub$trans$Interval[[ i ]] <- as.character(as.POSIXct( read.spc$bin$Originally.recorded[ xrange ][[ 1]]) + read.spc$sub$trans$Interval[[ i ]])
 
       read.spc$sub$trans$df[[ i ]] <- data.table( datetime = read.spc$sub$trans$Interval[[ i ]]
+                                                  , datetimeunique = read.spc$sub$trans$Interval[[ i ]][ 1 ]
                                                   , Iteration = read.spc$bin$Iteration[ xrange ]
                                                   , Average = read.spc$bin$Average[ xrange ]
                                                   , filename = read.spc$file$name[ xrange ]
@@ -388,6 +394,12 @@ read_spc <- function( working_directory = getwd(), spc.write = T, return.R = T, 
     # create new dt and order by columns ####
     read.spc$sub$trans$df <- rbindlist( read.spc$sub$trans$df, fill = T )
 
+    if("datetimeunique" %in% colnames(read.spc$subtrans$df)){
+      read.spc$subtrans$column.order <- c("datetime", "datetimeunique", "Iteration", "Average", "filename"
+                                         , sort( colnames(read.spc$subtrans$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$subtrans$df))) )) ]))} else{
+                                           read.spc$subtrans$column.order <- c("datetime", "Iteration", "Average", "filename"
+                                                                              , sort( colnames(read.spc$subtrans$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$subtrans$df))) )) ]))
+                                         }
     read.spc$sub$trans$column.order <- c("datetime", "Iteration", "Average", "filename"
                                          , sort( colnames(read.spc$sub$trans$df)[ which( !is.na( as.numeric( gsub("X", "", colnames(read.spc$sub$trans$df))) )) ]))
     read.spc$sub$trans$df <- read.spc$sub$trans$df[ , read.spc$sub$trans$column.order, with = F]
