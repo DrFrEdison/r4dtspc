@@ -11,13 +11,14 @@ LG3_transform_SQL_to_csv <- function(csv_file,
                                      wl = 190:598,
                                      export_server = T,
                                      G10 = F,
-                                     sqlquestion = NA){
+                                     sqlquestion = NA,
+                                     raute = F){
 
   customer <- input$customer
   location <- input$location
-  line <- input$unit
+  line <- input$line
 
-  if(sqlquestion %in% c("drk","production","reference","mea")!=T) stop("No sqlquestion defined")
+  if(sqlquestion %in% c("drk","spc","ref","mea")!=T) stop("No sqlquestion defined")
 
   export_directory <- service_backup_path(input$customer,input$location,input$line, dir_wd = wd)
   setwd(file_directory)
@@ -55,16 +56,15 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   }
   }
 
-
-  # rbind ####
+# rbind ####
   sql_raw <- do.call(plyr::rbind.fill,sql)
   sql_raw <- data.frame(sql_raw)
   iii <- which(sql_raw[ , ncol(sql_raw)] != "")[1]
   if(G10==T){sql_raw <- sql_raw[-1,]}
 
   # search for # ####
-  # ppp <- apply(sql_raw,1,function(x) length(which(as.numeric(gregexpr("#",x))>0)))
-  # if(length(which(ppp>0))>0) sql_raw <- sql_raw[-which(ppp>0),]
+  if(raute) ppp <- apply(sql_raw,1,function(x) length(which(as.numeric(gregexpr("#",x))>0)))
+  if(raute) if(length(which(ppp>0))>0) sql_raw <- sql_raw[-which(ppp>0),]
 
   # remove {} ####
   subbrace <- which(!is.na(as.numeric(apply(sql_raw[iii,],2,function(x) grep("\\{",x)))))
@@ -82,33 +82,33 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   # split data
   if(G10==F){sql$data <- sql_raw[,1:(subbrace[1]-1)]}else{sql$data <- sql_raw[,2:(subbrace[1]-1)]}
 
-  if(length(sqlquestion)==1 && sqlquestion %in% "production") sql$spc <- sql_raw[,subbrace[1]:subbrace2[1]]
+  if(length(sqlquestion)==1 && sqlquestion %in% "spc") sql$spc <- sql_raw[,subbrace[1]:subbrace2[1]]
   if(length(sqlquestion)==1 && sqlquestion %in% "drk") sql$drk <- sql_raw[,subbrace[1]:subbrace2[1]]
-  if(length(sqlquestion)==1 && sqlquestion %in% "reference") sql$ref <- sql_raw[,subbrace[1]:subbrace2[1]]
+  if(length(sqlquestion)==1 && sqlquestion %in% "ref") sql$ref <- sql_raw[,subbrace[1]:subbrace2[1]]
   if(length(sqlquestion)==1 && sqlquestion %in% "mea") sql$mea <- sql_raw[,subbrace[1]:subbrace2[1]]
 
   if(length(sqlquestion)>1) stop("Skript does not yet work for more than one spectra type, i.e. abs, drk, bgd or mea")
   rm(sql_raw)
 
-  sql$data$datetime <- as.POSIXct(as.character(sql$data$DateTime),format=c("%Y-%m-%d %H:%M:%OS"),tz="Europe/Berlin")
-  sql$data$date <- as.Date(sql$data$DateTime,tz="Europe/Berlin")
-  sql$data$time <- strftime(sql$data$DateTime, format = "%H:%M:%S", tz = "Europe/Berlin")
+  sql$data$datetime <- as.POSIXct(as.character(sql$data$DateTime),format=c("%Y-%m-%d %H:%M:%OS"),tz="UTC")
+  sql$data$date <- as.Date(sql$data$DateTime,tz="UTC")
+  sql$data$time <- strftime(sql$data$DateTime, format = "%H:%M:%S", tz = "UTC")
 
   sql$data$DateTime <- NULL
 
-  sql$date$location <- location
-  sql$date$line <- line
+  sql$data$location <- location
+  sql$data$line <- line
 
   sql$data <- sql$data[moveme(names(sql$data), "location line datetime date time first")]
   suppressWarnings(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)] <- apply(sql$data[,which(names(sql$data)=="accumulations"):ncol(sql$data)],2,function(x) as.numeric(gsub(",",".",x))))
 
-  if(length(sqlquestion)==1 && sqlquestion %in% "production") sql$spc <- t(sql$spc)
+  if(length(sqlquestion)==1 && sqlquestion %in% "spc") sql$spc <- t(sql$spc)
   if(length(sqlquestion)==1 && sqlquestion %in% "drk") sql$drk <- t(sql$drk)
-  if(length(sqlquestion)==1 && sqlquestion %in% "reference") sql$ref <- t(sql$ref)
+  if(length(sqlquestion)==1 && sqlquestion %in% "ref") sql$ref <- t(sql$ref)
   if(length(sqlquestion)==1 && sqlquestion %in% "mea") sql$mea <- t(sql$mea)
 
   # export ####
-  if(length(which(sqlquestion=="reference"))==1){
+  if(length(which(sqlquestion=="ref"))==1){
     refdatamean <- apply(sql$ref,2,mean)
     refdatasd <- apply(sql$ref,2,sd)
     if(length(which(!duplicated(refdatamean)))!=length(which(!duplicated(refdatasd)))){
@@ -144,7 +144,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
 
   }
 
-  if(length(which(sqlquestion=="production"))==1){
+  if(length(which(sqlquestion=="spc"))==1){
     export_spc <- data.frame(sql$data,t(sql$spc))
 
     # export_spc$Modell[which(export_spc$SampleName == "Coca-Cola" & export_spc$Modell == "NULL")] <- "LG3_GS2_CC_CC(CP)_V01"
@@ -154,7 +154,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
   }
 
   if(export_server==T){
-    if(length(which(sqlquestion=="reference"))==1){
+    if(length(which(sqlquestion=="ref"))==1){
       for(i in 1:length(unique(export_ref$date))){
         reftoexport <- export_ref[which(export_ref$date==unique(export_ref$date)[i]),]
         setwd(export_directory)
@@ -164,7 +164,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
         # suppressWarnings(colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))] <- gsub("X","",colnames(reftomerge)[which(!is.na(as.numeric(gsub("X","",colnames(reftomerge)))))]))
         #
         # reftomerge$date <- as.Date(reftomerge$date)
-        # reftomerge$datetime <- as.POSIXct(reftomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        # reftomerge$datetime <- as.POSIXct(reftomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="UTC")
         #
         # refmerged <- rbind(reftomerge,reftoexport)
         # refmerged <- refmerged[order(refmerged$datetime),]
@@ -190,7 +190,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
         # suppressWarnings(colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))] <- gsub("X","",colnames(drktomerge)[which(!is.na(as.numeric(gsub("X","",colnames(drktomerge)))))]))
         #
         # drktomerge$date <- as.Date(drktomerge$date)
-        # drktomerge$datetime <- as.POSIXct(drktomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+        # drktomerge$datetime <- as.POSIXct(drktomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="UTC")
         #
         # drkmerged <- rbind(drktomerge,drktoexport)
         # drkmerged <- drkmerged[order(drkmerged$datetime),]
@@ -206,7 +206,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
       }
       message(paste("drk exported to",getwd()))
     }
-    if(length(which(sqlquestion=="production"))==1){
+    if(length(which(sqlquestion=="spc"))==1){
       for(i in 1:length(unique(export_spc$date))){
         spctoexport <- export_spc[which(export_spc$date==unique(export_spc$date)[i]),]
         setwd(export_directory)
@@ -220,7 +220,7 @@ LG3_transform_SQL_to_csv <- function(csv_file,
           suppressWarnings(colnames(spctomerge)[which(!is.na(as.numeric(gsub("X","",colnames(spctomerge)))))] <- gsub("X","",colnames(spctomerge)[which(!is.na(as.numeric(gsub("X","",colnames(spctomerge)))))]))
 
           spctomerge$date <- as.Date(spctomerge$date)
-          spctomerge$datetime <- as.POSIXct(spctomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="Europe/Berlin")
+          spctomerge$datetime <- as.POSIXct(spctomerge$datetime,format="%Y-%m-%d %H:%M:%S",tz="UTC")
 
           spcmerged <- rbind(spctomerge,spctoexport)
           spcmerged <- spcmerged[order(spcmerged$datetime),]
