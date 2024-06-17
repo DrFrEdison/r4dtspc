@@ -42,35 +42,34 @@ service_email_LG3 <- function(today, yesterday
 
   # con$list_mail_folders() # List folders
 
-  # Loop to run script for all LG1 and LG2 ####
-  for(i in 1:nrow(systems)){
+  # Loop to run script for all LG3 and SG3 ####
 
     con$select_folder(name = folder) # Select Inbox
 
     # Create and navigate to folder customer/location/line
     dir.create(wd_export, showWarnings = F)
     setwd(wd_export)
-    dir.create(systems$customer[i], showWarnings = F)
-    setwd(paste0("./",systems$customer[i]))
-    dir.create(systems$short[i], showWarnings = F)
-    setwd(paste0("./",systems$short[i]))
-    dir.create(systems$line[i], showWarnings = F)
-    setwd(paste0("./",systems$line[i]))
+    dir.create(systems$customer, showWarnings = F)
+    setwd(paste0("./",systems$customer))
+    dir.create(systems$short, showWarnings = F)
+    setwd(paste0("./",systems$short))
+    dir.create(systems$line, showWarnings = F)
+    setwd(paste0("./",systems$line))
 
     lg3_service_email$wdc <- getwd() # Save current path
 
     # Search for log_zip emails ####
-    lg3_service_email$search_log.drk <- paste0(yesterday, "_", systems$customer[i], "_", systems$location[i], "_", systems$line[i], "_drk")
+    lg3_service_email$search_log.drk <- paste0(yesterday, "_", systems$customer, "_", systems$location, "_", systems$line, "_drk")
     lg3_service_email$find_log.drk <- con$search(request = AND(mRpostman::string(expr = lg3_service_email$search_log.drk, where = "SUBJECT"),
                                                                since(date_char = lg3_service_email$today_outlook)), use_uid = T)
     lg3_service_email$find_log.drk <- lg3_service_email$find_log.drk[ length( lg3_service_email$find_log.drk ) ]
 
-    lg3_service_email$search_log.ref <- paste0(yesterday, "_", systems$customer[i], "_", systems$location[i], "_", systems$line[i], "_ref")
+    lg3_service_email$search_log.ref <- paste0(yesterday, "_", systems$customer, "_", systems$location, "_", systems$line, "_ref")
     lg3_service_email$find_log.ref <- con$search(request = AND(mRpostman::string(expr = lg3_service_email$search_log.ref, where = "SUBJECT"),
                                                                since(date_char = lg3_service_email$today_outlook)), use_uid = T)
     lg3_service_email$find_log.ref <- lg3_service_email$find_log.ref[ length( lg3_service_email$find_log.ref )]
 
-    lg3_service_email$search_log.spc <- paste0(yesterday, "_", systems$customer[i], "_", systems$location[i], "_", systems$line[i], "_spc")
+    lg3_service_email$search_log.spc <- paste0(yesterday, "_", systems$customer, "_", systems$location, "_", systems$line, "_spc")
     lg3_service_email$find_log.spc <- con$search(request = AND(mRpostman::string(expr = lg3_service_email$search_log.spc, where = "SUBJECT"),
                                                                since(date_char = lg3_service_email$today_outlook)), use_uid = T)
     lg3_service_email$find_log.spc <- sort( lg3_service_email$find_log.spc )
@@ -79,7 +78,7 @@ service_email_LG3 <- function(today, yesterday
             , ifelse( is.na(lg3_service_email$find_log.drk), 0, length( lg3_service_email$find_log.drk )), " Dark spectra, "
             , ifelse( is.na(lg3_service_email$find_log.ref), 0, length( lg3_service_email$find_log.ref )), " Reference spectra and "
             , ifelse( length( lg3_service_email$find_log.spc ) == 0, 0, ifelse( is.na(lg3_service_email$find_log.spc), 0, length( lg3_service_email$find_log.spc ))), " Production spectra"
-            , " from ", paste0(systems$customer[i], "_", systems$location[i], "_", systems$line[i], "_", systems$LG[i])
+            , " from ", paste0(systems$customer, "_", systems$location, "_", systems$line, "_", systems$LG)
             , ", date = ", yesterday)
 
     lg3_service_email$find_log <- c(lg3_service_email$find_log.drk, lg3_service_email$find_log.ref, lg3_service_email$find_log.spc)
@@ -89,7 +88,7 @@ service_email_LG3 <- function(today, yesterday
     setwd(lg3_service_email$wdc)
 
     # next loop if no attachments were found
-    if(!any(!is.na(lg3_service_email$find_log))) next
+    if(!any(!is.na(lg3_service_email$find_log))) stop("No attachments were found")
     unlink(dir(path = lg3_service_email$wdc, recursive = T), force = T, recursive = T)
 
     if(any(!is.na(lg3_service_email$find_log))){
@@ -112,7 +111,7 @@ service_email_LG3 <- function(today, yesterday
     if( length( dir( pattern = "spc R export", recursive = T) ) != 0){
       read.spc <- lapply(dir( pattern = "spc R export", recursive = T), function( x ) fread(x, sep = ";", dec = ",", fill = F))
 
-      if(systems$LG[ i ] == "SG3"){
+      if(systems$LG == "SG3"){
         # Timestamp Bug in SG3
         for(k in 1 : length( read.spc)){
           read.spc[[ k ]]$spectrumTimestamp <- as.character( read.spc[[ k ]]$spectrumTimestamp )
@@ -124,14 +123,14 @@ service_email_LG3 <- function(today, yesterday
 
       read.spc <- rbindlist(read.spc, fill = T)
       read.spc$time <- strftime(read.spc$datetime, format = "%H:%M:%S", tz = "UTC")
-      read.spc$location <- systems$location[ i ]
-      read.spc$line <- systems$line[ i ]
+      read.spc$location <- systems$location
+      read.spc$line <- systems$line
     }
 
     # Move csv ####
-    export_directory <- service_backup_path(systems$customer[ i ]
-                                            , systems$location[ i ]
-                                            , systems$line[ i ], dir_wd = wd)
+    export_directory <- service_backup_path(systems$customer
+                                            , systems$location
+                                            , systems$line, dir_wd = wd)
 
     if( length( lg3_service_email$find_log.ref ) != 0)
       if( exists("read.ref")){
@@ -157,9 +156,9 @@ service_email_LG3 <- function(today, yesterday
           }
           reftoexport <- reftoexport[order(reftoexport$datetime),]
           fwrite(reftoexport,paste0(unique(reftoexport$date),"_",
-                                    systems$customer[ i ],"_",
-                                    systems$location[ i ],"_",
-                                    systems$line[ i ],"_ref.csv"), sep = ";", dec = ",")
+                                    systems$customer,"_",
+                                    systems$location,"_",
+                                    systems$line,"_ref.csv"), sep = ";", dec = ",")
           rm(read.ref)
         }
       }
@@ -188,9 +187,9 @@ service_email_LG3 <- function(today, yesterday
           }
           drktoexport <- drktoexport[order(drktoexport$datetime),]
           fwrite(drktoexport,paste0(unique(drktoexport$date),"_",
-                                    systems$customer[ i ],"_",
-                                    systems$location[ i ],"_",
-                                    systems$line[ i ],"_drk.csv"), sep = ";", dec = ",")
+                                    systems$customer,"_",
+                                    systems$location,"_",
+                                    systems$line,"_drk.csv"), sep = ";", dec = ",")
           rm(read.drk)
         }
       }
@@ -210,7 +209,7 @@ service_email_LG3 <- function(today, yesterday
             spctomerge <- fread(dir()[which(gsub("_spc.csv","",dir())==unique(spctoexport$date))], sep = ";", dec = ",")
             if( nrow( spctomerge ) < 1) spctomerge <- spctoexport
 
-            if(systems$LG[ i ] == "SG3"){
+            if(systems$LG == "SG3"){
               # Timestamp Bug in SG3
               spctomerge$spectrumTimestamp <- as.character(spctomerge$spectrumTimestamp)
               spctomerge$statusTimestamp <- as.character(spctomerge$statusTimestamp)
@@ -231,16 +230,16 @@ service_email_LG3 <- function(today, yesterday
           }
           spctoexport <- spctoexport[order(spctoexport$datetime),]
           fwrite(spctoexport,paste0(unique(spctoexport$date),"_",
-                                    systems$customer[ i ],"_",
-                                    systems$location[ i ],"_",
-                                    systems$line[ i ],"_spc.csv"), sep = ";", dec = ",")
+                                    systems$customer,"_",
+                                    systems$location,"_",
+                                    systems$line,"_spc.csv"), sep = ";", dec = ",")
           rm(read.spc)
         }
 
-        produkt_per_day_year(customer = systems$customer[ i ]
-                             , location = systems$location[ i ]
-                             , line = systems$line[ i ]
-                             , LG = systems$LG[ i ]
+        produkt_per_day_year(customer = systems$customer
+                             , location = systems$location
+                             , line = systems$line
+                             , LG = systems$LG
                              , year = as.numeric(substr(unique( spc.date$date ), 1, 4))
                              , dir_wd = wd
                              , date_file = unique( spc.date$date ))
@@ -250,6 +249,33 @@ service_email_LG3 <- function(today, yesterday
     unlink(dir(path = lg3_service_email$wdc, recursive = T), force = T, recursive = T)
     unlink( list.dirs(), recursive = T)
 
-  }
+    if(delete_emails == T){
+
+      lg3_service_email$delete$search$log.drk <- list()
+      lg3_service_email$delete$search$log.ref <- list()
+      lg3_service_email$delete$search$log.spc <- list()
+
+      lg3_service_email$delete$find$log.drk <- list()
+      lg3_service_email$delete$find$log.ref <- list()
+      lg3_service_email$delete$find$log.spc <- list()
+
+      for(d in 0:30){
+      lg3_service_email$delete$search$log.drk[[ d + 1 ]] <- paste0(yesterday - d, "_", systems$customer, "_", systems$location, "_", systems$line, "_drk")
+      lg3_service_email$delete$search$log.ref[[ d + 1 ]] <- paste0(yesterday - d, "_", systems$customer, "_", systems$location, "_", systems$line, "_ref")
+      lg3_service_email$delete$search$log.spc[[ d + 1 ]] <- paste0(yesterday - d, "_", systems$customer, "_", systems$location, "_", systems$line, "_spc")
+
+      lg3_service_email$delete$find$log.drk[[ d + 1 ]] <- con$search(request = string(expr = lg3_service_email$delete$search$log.drk[[ d + 1 ]], where = "SUBJECT"), use_uid = T)
+      lg3_service_email$delete$find$log.ref[[ d + 1 ]] <- con$search(request = string(expr = lg3_service_email$delete$search$log.ref[[ d + 1 ]], where = "SUBJECT"), use_uid = T)
+      lg3_service_email$delete$find$log.spc[[ d + 1 ]] <- con$search(request = string(expr = lg3_service_email$delete$search$log.spc[[ d + 1 ]], where = "SUBJECT"), use_uid = T)
+
+      }
+
+      con$delete$uid <- sort(as.numeric(unlist(lg3_service_email$delete$find)))
+      con$delete$uid
+      con$delete_msg(msg_id = con$delete$uid, use_uid = T, mute = F, retries = 5)
+      con$expunge(msg_uid = con$delete$uid, mute = F, retries = 5)
+      con$expunge()
+    }
+
 }
 

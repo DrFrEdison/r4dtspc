@@ -4,7 +4,8 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
                                             export_server = T,
                                             sqlquestion = NA,
                                             export_local = F,
-                                            dir_wd){
+                                            dir_wd,
+                                            dtcustomer = dt_customer){
   setwd(file_directory)
   csv_filep <- fread(csv_file, nrows = 200, fill = T,  header = F)
 
@@ -26,21 +27,20 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
   sql <- lapply(csv_file, function(x) fread(x, dec = ",", sep = ";", fill = T, header = F))
   # sql <- lapply(csv_file,function(x) read.csv2(x,head=F,sep=";",dec=",",fileEncoding = "UTF-8-BOM", check.names = F, colClasses = "character"))
 
-  customer <- "CCEP"
-  location <- unique(sql[[1]][ , 1])
+  # Location, line and customer ####
+  location <-  as.character(unique( unlist(sql[[1]][ , 1])))[ 1 ]
+  if(nchar(location) == 4) location <- substr(location, 2, 4) # Bug?
+  line <- as.character(unique( unlist(sql[[1]][ , 2])))[ 1 ]
+  location <- dtcustomer$location[ which(dtcustomer$shortcut %in% location & dtcustomer$line %in% line)[ 1 ]]
+  customer <- as.character(dtcustomer$customer[ which(dtcustomer$line == line & dtcustomer$location == location)[ 1 ]])
 
-  if(location == "DOR") location = "Dorsten"
-  if(location == "MAN") location = "Mannheim"
-  if(location == "MOG") location = "Moenchengladbach"
-
-  line <- as.character(unique(unlist(sql[[1]][ , 2])))
+  # Export local ####
   if( !export_local) export_directory <- service_backup_path(customer,location,line, dir_wd = dir_wd)
   if( export_local) export_directory <- getwd()
 
-  # rbind ####
+  # rbind & year ####
   sql_raw <- rbindlist(sql)
   sql_raw <- sql_raw[,-ncol(sql_raw),with = F]
-
   yearp <- unique(sql_raw[, lapply(.SD, function(x) year(as.POSIXct(as.character(x)))), .SDcols = c(4)])
 
   # search for # ####
@@ -61,6 +61,9 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
   cols <- as.numeric(which( unlist( lapply(sqlcomma, length) ) > 0 ))
 
   suppressWarnings(  sql_raw <- sql_raw[ , ( cols ) := lapply(.SD, function(x) as.numeric( as.character( gsub( ",", ".", x)))), .SDcols = cols] )
+
+  # order by datetime
+  sql_raw <- sql_raw[ order(sql_raw$timestamp) , ]
 
   # remove and wl ####
   if(sqlquestion %in% "drk_ref") sql_raw$toremove <- NULL
@@ -136,8 +139,6 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
           reftomerge <- fread(dir()[which(gsub("_ref.csv","",dir())==unique(reftoexport$date))], sep = ";", dec = ",")
 
           reftomerge$date <- as.Date(reftomerge$date)
-          # attr(reftomerge$datetime, "tzone") <- "Europe/Berlin"
-
           refmerged <- rbindlist(list(reftomerge,reftoexport), fill = T)
 
           refmerged <- refmerged[order(refmerged$datetime),]
@@ -220,10 +221,6 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
       }
       message(paste("spc exported to",getwd()))
     }
-
-    if(location == "DOR") location = "Dorsten"
-    if(location == "MAN") location = "Mannheim"
-    if(location == "MOG") location = "Moenchengladbach"
 
     if( !export_local ){
       for(k in as.character(unique(sql$data$date))){
