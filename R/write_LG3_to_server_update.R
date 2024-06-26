@@ -41,7 +41,7 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
   # rbind & year ####
   sql_raw <- rbindlist(sql)
   sql_raw <- sql_raw[,-ncol(sql_raw),with = F]
-  yearp <- unique(sql_raw[, lapply(.SD, function(x) year(as.POSIXct(as.character(x)))), .SDcols = c(4)])
+  yearp <- unique( unlist(sql_raw[, lapply(.SD, function(x) year(as.POSIXct(as.character(x)))), .SDcols = c(4)]))
 
   # search for # ####
   if(sqlquestion %in% "drk_ref") colnames(sql_raw) <- c(colnames_sql$drk_ref[-c((length(colnames_sql$drk_ref)-2) : length(colnames_sql$drk_ref))]
@@ -224,13 +224,13 @@ LG3_transform_SQL_update_to_csv <- function(csv_file,
 
     if( !export_local ){
       for(k in as.character(unique(sql$data$date))){
-        for(j in 1 : nrow(yearp)){
-          if( as.numeric(year(k)) != as.numeric(yearp[j,])) next
+        for(j in 1 : length( as.character( unlist( yearp)))){
+          if( as.numeric(year(k)) != as.numeric(unlist(yearp[j]))) next
           if(length(which(sqlquestion=="production"))==1) produkt_per_day_year(customer = customer
                                                                                , location = location
                                                                                , line = line
                                                                                , LG = ifelse( line == "Syrup", "Syrup", "3")
-                                                                               , year = as.numeric(yearp[j,])
+                                                                               , year = as.numeric(unlist(yearp[j]))
                                                                                , date = k
                                                                                , dir_wd = dir_wd)
         }
